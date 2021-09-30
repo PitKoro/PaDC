@@ -1,45 +1,59 @@
-#include <stdio.h>
-#include <math.h>
-#include <time.h>
+#include <stdlib.h> 
+#include <stdio.h> 
 
-__global__ void sinX(double *x, double *result) {
-    *result = sin(*x);
+ 
+void Sin(float*, int, double); 
+ 
+__global__ void SinKernel(float *a, float *b) { 
+int idx = threadIdx.x + blockIdx.x * blockDim.x; 
+b[idx] = sinf(a[idx]); 
+} 
+ 
+void Printer(float *a, int n){ 
+ for (int i = 0; i < n; i++){ 
+ printf("%f\n", a[i]); 
+ } 
+} 
+ 
+void Assigner(float *a, int n){ 
+ for (int i = 0; i < n; i++){ 
+ a[i] = (float)i; 
+ } 
+} 
+ 
+int main(){ 
+ 
+int n = 1024 * 1024; 
+int size = n * sizeof(double);
+ 
+ 
+float *aDev = NULL, *bDev = NULL; 
+float *a = NULL, *b = NULL; 
+ 
+cudaMalloc((void **) &aDev, size); 
+cudaMalloc((void **) &bDev, size); 
+ 
+a = (float *) malloc(size); 
+b = (float *) malloc(size); 
+ 
+Assigner(a, n); 
+ 
+dim3 threads = dim3(512, 1); 
+dim3 blocks = dim3(n / threads.x, 1); 
+ 
+cudaMemcpy(aDev, a, size, cudaMemcpyHostToDevice); 
+cudaMemcpy(bDev, b, size, cudaMemcpyHostToDevice); 
+ 
+SinKernel<<<blocks, threads>>> (aDev, bDev); 
+ 
+cudaMemcpy(b, bDev, size, cudaMemcpyDeviceToHost); 
+ 
+Printer(b, n); 
+ 
+cudaFree(aDev); 
+cudaFree(bDev); 
+ 
+free(a); 
+free(b); 
 }
 
-int main() {
-    clock_t begin = clock();
-    // переменные хоста
-    double x, result;
-    int size = sizeof(double);
-
-    // копии для устройства
-    double *d_x, *d_result;
-
-    // выделяем память на устройстве
-    cudaMalloc((void **)&d_x, size);
-    cudaMalloc((void **)&d_result, size);
-
-    // инициализируем переменную хоста
-    x = 1;
-
-    // копируем данные с хоста на устройство
-    cudaMemcpy(d_x, &x, size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_result, &result, size, cudaMemcpyHostToDevice);
-
-    // вызов функции на хосте
-    // но работать она будет на устройстве
-    sinX<<<1,1>>>(d_x, d_result);
-
-    //копируем данные с устройства на хост
-    cudaMemcpy(&result, d_result, size, cudaMemcpyDeviceToHost);
-
-    // Cleanup
-    cudaFree(d_x); cudaFree(d_result);
-    clock_t end = clock();
-    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-
-    printf("GPU:\n%f\n", result);
-    printf("Time: %f\n", time_spent);
-
-    return 0;
-}
