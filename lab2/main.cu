@@ -103,20 +103,19 @@ int gpu_decomposition(int *matrix, int N, float *lu_matrix)
 {
     int * dev_matrix, threads;
     float * dev_lu_matrix, elapsed_time;
-	cudaEvent_t start, stop;
+    cudaEvent_t start, stop;
     bool flag = true, * dev_flag;
 
     cudaEventCreate(&start);
-	cudaEventCreate(&stop);
- 
-	cudaMalloc(&dev_flag, sizeof(bool));
-	cudaMalloc(&dev_matrix, sizeof(int) * N * N);
-	cudaMalloc(&dev_lu_matrix, sizeof(float) * N * N);
+    cudaEventCreate(&stop);
+
+    cudaMalloc(&dev_flag, sizeof(bool));
+    cudaMalloc(&dev_matrix, sizeof(int) * N * N);
+    cudaMalloc(&dev_lu_matrix, sizeof(float) * N * N);
  
     cudaMemcpy(dev_matrix, matrix, sizeof(int) * N * N, cudaMemcpyHostToDevice);
     cudaMemcpy(dev_flag, &flag, sizeof(bool), cudaMemcpyHostToDevice);
     
- 
     cudaBindTexture(NULL, matrix_t, dev_matrix, cudaCreateChannelDesc<int>(), sizeof(int) * N * N);
     
     if(N < 250){
@@ -127,8 +126,7 @@ int gpu_decomposition(int *matrix, int N, float *lu_matrix)
     }
 
     cudaEventRecord(start, 0);
- 
-	matrixLU<<<1,threads>>>(dev_lu_matrix, N, dev_flag);
+    matrixLU<<<1,threads>>>(dev_lu_matrix, N, dev_flag);
 
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
@@ -136,18 +134,19 @@ int gpu_decomposition(int *matrix, int N, float *lu_matrix)
     cudaEventElapsedTime(&elapsed_time, start, stop);
 	  
     cudaEventDestroy(start);
-	cudaEventDestroy(stop);
+    cudaEventDestroy(stop);
     
     cudaMemcpy(&flag, dev_flag, sizeof(bool), cudaMemcpyDeviceToHost);
     if(flag){
       cudaMemcpy(lu_matrix, dev_lu_matrix, sizeof(float) * N * N, cudaMemcpyDeviceToHost);
     }
-	cudaFree(dev_matrix);
-	cudaFree(dev_lu_matrix);
+	
+    cudaFree(dev_matrix);
+    cudaFree(dev_lu_matrix);
  
     if(!flag) return -1;
  
-	return round(elapsed_time);
+    return round(elapsed_time);
 }
 
 int cpu_decomposition(int *matrix, int N, float *lu_matrix)
@@ -170,9 +169,7 @@ int cpu_decomposition(int *matrix, int N, float *lu_matrix)
                 *(lu_matrix+(i)*N+r-1) -= (*(lu_matrix+i*N+k)) * (*(lu_matrix+k*N + r-1));
             }
             
-            *(lu_matrix+(i)*N+r-1) /= *(lu_matrix+(r-1)*N+r-1);
-            
-            
+            *(lu_matrix+(i)*N+r-1) /= *(lu_matrix+(r-1)*N+r-1);            
         }
         
         //U row r - compute
