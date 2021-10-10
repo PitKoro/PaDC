@@ -190,7 +190,7 @@ int cpu_decomposition(int *matrix, int N, float *lu_matrix)
     return (int)(clock() - start)/ (CLOCKS_PER_SEC / 1000);
 }
 
-void compute(int N, bool display_data = false, int * test_matrix = nullptr)
+void decomposition(int N, bool display_data = false, int * test_matrix = nullptr)
 {
     int * matrix;
     float * cpu_lu_matrix, * gpu_lu_matrix;
@@ -245,20 +245,13 @@ void compute(int N, bool display_data = false, int * test_matrix = nullptr)
 }
 
 int main() {
-    int test_matrix[16] = {
-        3, 4, -9, 5,
-        -15, -12, 50, -16,
-        -27, -36, 73, 8,
-        9, 12, -10, -16
-    };
-    compute(4, true, test_matrix);
-    srand(time(NULL));
-    compute(64);
-    compute(128);
-    compute(256);
-    compute(512);
-    compute(1024);
-    compute(2048);
+    decomposition(3);
+    decomposition(64);
+    decomposition(128);
+    decomposition(256);
+    decomposition(512);
+    decomposition(1024);
+    decomposition(2048);
 
     return 0;
 }
